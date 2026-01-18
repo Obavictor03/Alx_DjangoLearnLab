@@ -1,6 +1,9 @@
 from django.shortcuts import render
 from django.views.generic.detail import DetailView
 from .models import Library, Book
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.views import LoginView, LogoutView
 
 # Create your views here.
 def list_books(request):
@@ -18,3 +21,30 @@ class LibraryDetailView(DetailView):
 
         context["books"] = self.objects.book.all()
         return context
+
+
+# Login View (built-in)
+class UserLoginView(LoginView):
+    template_name = "relationship_app/login.html"
+
+
+# Logout View (built-in)
+class UserLogoutView(LogoutView):
+    template_name = "relationship_app/logout.html"
+
+
+# Registration View (custom, uses built-in form)
+def register_view(request):
+    if request.method == "POST":
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect("book_list_function")
+    else:
+        form = UserCreationForm()
+
+    context = {
+        "form": form
+    }
+    return render(request, "relationship_app/register.html", context)

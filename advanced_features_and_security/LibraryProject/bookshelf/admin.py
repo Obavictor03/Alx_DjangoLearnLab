@@ -15,7 +15,8 @@ class Bookadmin(admin.ModelAdmin):
     list_per_page = 20
 
 
-@admin.register(CustomUser)
+admin.site.register(CustomUser, CustomUserAdmin)
+
 class CustomUserAdmin(UserAdmin):
     list_display = (
         "username",

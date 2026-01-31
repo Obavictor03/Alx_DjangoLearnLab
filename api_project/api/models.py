@@ -5,3 +5,7 @@ class Customer(models.Model):
     firstName = models.CharField(max_length=100)
     lastName = models.CharField(max_length=100)
     phone = models.CharField(max_length=20)
+
+class Book(models.Model):
+    title = models.CharField(max_length=100)
+    author = models.CharField(max_length=100)

@@ -1,7 +1,10 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
+from django.shortcuts import get_object_or_404
+from .models import CustomUser
 from rest_framework.authtoken.models import Token
-from django.contrib.auth import get_user_model, authenticate
+from django.contrib.auth import get_user_model
 from rest_framework import permissions
 from .models import CustomUser
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
@@ -9,6 +12,37 @@ from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 User = get_user_model()
 
 # Create your views here.
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def follow_user(request, user_id):
+    current_user = request.user
+    target_user = get_object_or_404(CustomUser, id=user_id)
+
+    if target_user == current_user:
+        return Response({'detail': 'You cannot follow yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if target_user in current_user.following.all():
+        return Response({'detail': 'You are already following this user.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    current_user.following.add(target_user)
+    return Response({'detail': f'You are now following {target_user.username}.'}, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def unfollow_user(request, user_id):
+    current_user = request.user
+    target_user = get_object_or_404(CustomUser, id=user_id)
+
+    if target_user == current_user:
+        return Response({'detail': 'You cannot unfollow yourself.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if target_user not in current_user.following.all():
+        return Response({'detail': 'You are not following this user.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    current_user.following.remove(target_user)
+    return Response({'detail': f'You have unfollowed {target_user.username}.'}, status=status.HTTP_200_OK)
+
 
 class RegisterView(generics.CreateAPIView):
     queryset = CustomUser.objects.all()

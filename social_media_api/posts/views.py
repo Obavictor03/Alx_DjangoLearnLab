@@ -1,22 +1,15 @@
-from rest_framework import viewsets, permissions, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.views import APIView
 from .models import Post, Comment
 from django_filters.rest_framework import DjangoFilterBackend
 from .pagination import StandardResultsSetPagination
-from .views import IsOwnerOrReadOnly
+from .permissions import IsOwnerOrReadOnly
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 
 # Create your views here.
-
-# Custom permission to allow only post owners to edit or delete their posts.
-class IsOwnerOrReadOnly(permissions.BasePermission):
-    def has_object_permission(self, request, view, obj):
-        if request.method in permissions.SAFE_METHODS:
-            return True
-        return obj.author == request.user
-
 
 # define the post behavior.
 class PostViewSet(viewsets.ModelViewSet):
@@ -47,3 +40,13 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class FeedView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        feed_posts = Post.objects.filter(author__in=user.following.all()).order_by('-created_at')
+        serializer = PostSerializer(feed_posts, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)

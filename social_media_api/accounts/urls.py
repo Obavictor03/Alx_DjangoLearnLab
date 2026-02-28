@@ -1,5 +1,4 @@
 from django.urls import path
-from posts.views import follow_user
 from .views import RegisterView, LoginView, ProfileView, follow_user, unfollow_user
 
 urlpatterns = [

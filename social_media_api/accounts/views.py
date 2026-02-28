@@ -1,3 +1,4 @@
+from urllib import request
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
@@ -7,6 +8,7 @@ from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
 from rest_framework import permissions
 from .models import CustomUser
+from notifications.utils import create_notification
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 
 User = get_user_model()
@@ -26,6 +28,13 @@ def follow_user(request, user_id):
     
     current_user.following.add(target_user)
     return Response({'detail': f'You are now following {target_user.username}.'}, status=status.HTTP_200_OK)
+
+create_notification(
+    actor=request.user,
+    verb='started following you',
+    recipient=target_user,
+    target=request.user
+)
 
 
 @api_view(['POST'])
